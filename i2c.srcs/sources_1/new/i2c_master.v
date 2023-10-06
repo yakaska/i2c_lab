@@ -15,44 +15,44 @@ module i2c_master(
    assign scl = clk_reg;   
 
    parameter [7:0] addr = 8'b1001_0111;// 0x97
-   reg [7:0] msb = 8'b0;                                  // Temp data MSB
-   reg [7:0] lsb = 8'b0;                                  // Temp data LSB
-   reg sda_output = 1'b1;                                       // output bit to sda - starts HIGH
-   reg [11:0] count = 12'b0;                               // State Machine Synchronizing Counter
-   reg [15:0] temp_data_reg;					                  // Temp data buffer register			
+   reg [7:0] msb = 8'b0;
+   reg [7:0] lsb = 8'b0;
+   reg sda_output = 1'b1;
+   reg [11:0] count = 12'b0;
+   reg [15:0] temp_data_reg;		
 
    localparam [4:0] 
       POWER_UP   = 5'h00,
       START      = 5'h01,
       SEND_ADDR6 = 5'h02,
-		SEND_ADDR5 = 5'h03,
-		SEND_ADDR4 = 5'h04,
-		SEND_ADDR3 = 5'h05,
-		SEND_ADDR2 = 5'h06,
-		SEND_ADDR1 = 5'h07,
-		SEND_ADDR0 = 5'h08,
-		SEND_RW    = 5'h09,
+	  SEND_ADDR5 = 5'h03,
+	  SEND_ADDR4 = 5'h04,
+	  SEND_ADDR3 = 5'h05,
+	  SEND_ADDR2 = 5'h06,
+	  SEND_ADDR1 = 5'h07,
+	  SEND_ADDR0 = 5'h08,
+	  SEND_RW    = 5'h09,
       REC_ACK    = 5'h0A,
       REC_MSB7   = 5'h0B,
-		REC_MSB6	  = 5'h0C,
-		REC_MSB5	  = 5'h0D,
-		REC_MSB4	  = 5'h0E,
-		REC_MSB3	  = 5'h0F,
-		REC_MSB2	  = 5'h10,
-		REC_MSB1	  = 5'h11,
-		REC_MSB0	  = 5'h12,
+	  REC_MSB6	  = 5'h0C,
+	  REC_MSB5	  = 5'h0D,
+	  REC_MSB4	  = 5'h0E,
+	  REC_MSB3	  = 5'h0F,
+	  REC_MSB2	  = 5'h10,
+	  REC_MSB1	  = 5'h11,
+	  REC_MSB0	  = 5'h12,
       SEND_ACK   = 5'h13,
       REC_LSB7   = 5'h14,
-		REC_LSB6	  = 5'h15,
-		REC_LSB5	  = 5'h16,
-		REC_LSB4	  = 5'h17,
-		REC_LSB3	  = 5'h18,
-		REC_LSB2	  = 5'h19,
-		REC_LSB1	  = 5'h1A,
-		REC_LSB0	  = 5'h1B,
+	  REC_LSB6	  = 5'h15,
+	  REC_LSB5	  = 5'h16,
+	  REC_LSB4	  = 5'h17,
+	  REC_LSB3	  = 5'h18,
+	  REC_LSB2	  = 5'h19,
+	  REC_LSB1	  = 5'h1A,
+	  REC_LSB0	  = 5'h1B,
       NACK       = 5'h1C;
       
-   reg [4:0] state_reg = POWER_UP; // state register
+   reg [4:0] state_reg = POWER_UP;
             
    always @(posedge clk_200khz) begin
       if(counter == 9) begin
@@ -63,7 +63,6 @@ module i2c_master(
          counter <= counter + 1;
       end
 
-      // State Machine Logic 
       count <= count + 1;
       case(state_reg)
          POWER_UP: begin
@@ -72,7 +71,7 @@ module i2c_master(
          end
          START: begin
             if(count == 12'd2004)
-               sda_output <= 1'b0;          // send START condition 1/4 clock after scl goes high    
+               sda_output <= 1'b0;
             if(count == 12'd2013)
                state_reg <= SEND_ADDR6; 
                end
@@ -215,19 +214,17 @@ module i2c_master(
          endcase     
    end       
    
-   // Buffer for temperature data
    always @(posedge clk_200khz)
       if(state_reg == NACK)
          temp_data_reg <= {msb, lsb};
     
    assign sda_direction = (state_reg == POWER_UP   || state_reg == START      || state_reg == SEND_ADDR6 || state_reg == SEND_ADDR5 ||
-					      state_reg == SEND_ADDR4 || state_reg == SEND_ADDR3 || state_reg == SEND_ADDR2 || state_reg == SEND_ADDR1 ||
-                     state_reg == SEND_ADDR0 || state_reg == SEND_RW    || state_reg == SEND_ACK   || state_reg == NACK) ? 1 : 0;
-   // Set the value of sda for output - from master to sensor
+					       state_reg == SEND_ADDR4 || state_reg == SEND_ADDR3 || state_reg == SEND_ADDR2 || state_reg == SEND_ADDR1 ||
+                           state_reg == SEND_ADDR0 || state_reg == SEND_RW    || state_reg == SEND_ACK   || state_reg == NACK) ? 1 : 0;
    assign sda = sda_direction ? sda_output : 1'bz;
-   // Set value of input wire when sda is used as an input - from sensor to master
+
    assign i_bit = sda;
-   // Outputted temperature data
+
    assign temp_data = temp_data_reg;
  
 endmodule

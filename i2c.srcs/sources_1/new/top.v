@@ -5,7 +5,8 @@ module top(
     inout         TMP_SDA,          // i2c sda on temp sensor - bidirectional
     output        TMP_SCL,          // i2c scl on temp sensor
     output [7:0]  SEG,              // 7 segments of each display
-    output [7:0]  AN      // 8 anodes of 8 displays
+    output [7:0]  AN,
+    output [15:0] led
     );
     
     wire clk_200khz;                  // 200kHz SCL
@@ -25,10 +26,12 @@ module top(
     
     seg7c seg_control(
         .clk_100mhz(CLK100MHZ),
-        .c_data(c_data[15:8]),
-        .c_data_precision(c_data[7:0]),
+        .c_data(c_data[15:7]),
+        .c_data_precision(c_data[6:3]),
         .SEG(SEG),
         .AN(AN)
     );
+    
+    assign led = c_data;
     
 endmodule
